@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urunji Finance - Loan Officer Dashboard</title>
+    <style>
+        :root {
+            --primary: #2ecc71; /* Green */
+            --primary-dark: #27ae60; /* Darker green */
+            --secondary: #27ae60; /* Lighter green */
+            --success: #219653;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --light: #e8f5e9; /* Light green tint */
+            --dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header img {
+            height: 40px;
+            width: auto;
+            margin-right: 1rem;
+        }
+        
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar li:hover {
+            background-color: rgba(255,255,255,0.1);
+            padding-left: 10px;
+        }
+        
+        .sidebar li.active {
+            background-color: rgba(255,255,255,0.2);
+            font-weight: bold;
+        }
+        
+        .main-content {
+            padding: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .stat-card p {
+            margin-bottom: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        button.secondary {
+            background-color: var(--light);
+            color: var(--dark);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: var(--light);
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: rgba(0,0,0,0.02);
+        }
+        
+        .status-completed {
+            color: var(--success);
+        }
+        
+        .status-pending {
+            color: var(--warning);
+        }
+        
+        .status-overdue {
+            color: var(--danger);
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        
+        .collection-sheet {
+            overflow-x: auto;
+        }
+        
+        .collection-sheet table {
+            min-width: 1200px;
+        }
+        
+        .collection-sheet th, .collection-sheet td {
+            text-align: center;
+            padding: 0.5rem;
+        }
+        
+        .collection-sheet th:first-child, 
+        .collection-sheet td:first-child {
+            text-align: left;
+            min-width: 120px;
+        }
+        
+        .collection-sheet input {
+            width: 70px;
+            text-align: center;
+            padding: 0.25rem;
+        }
+        
+        .collection-totals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .collection-total-card {
+            background-color: var(--light);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .total-row {
+            font-weight: bold;
+            background-color: var(--light);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                z-index: 1000;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .sidebar-toggle {
+                display: block;
+            }
+            
+            .stats-grid, .collection-totals {
+                grid-template-columns: 1fr;
+            }
+            
+            .header img {
+                height: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <div style="display: flex; align-items: center;">
+            <img src="https://via.placeholder.com/40x40.png?text=UF" alt="Urunji Finance Logo">
+            <h1>Urunji Finance</h1>
+        </div>
+        <div>Welcome, Loan Officer | <a href="#" style="color: white; text-decoration: none;" aria-label="Logout">Logout</a></div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="sidebar" role="navigation" aria-label="Main menu">
+            <h3>Menu</h3>
+            <ul>
+                <li class="active" data-section="dashboard">Dashboard</li>
+                <li data-section="group-loans">Group Loans</li>
+                <li data-section="collection-sheets">Collection Sheets</li>
+                <li data-section="repayment-tracking">Repayment Tracking</li>
+                <li data-section="reports">Reports</li>
+                <li data-section="settings">Settings</li>
+            </ul>
+        </div>
+
+        <div class="main-content" role="main">
+            <div id="dashboard-section">
+                <h2>Loan Officer Dashboard</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Active Groups</h3>
+                        <p>8</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Loans Outstanding</h3>
+                        <p>ZMW 120,000.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Collection Rate</h3>
+                        <p>92%</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Due Today</h3>
+                        <p>ZMW 8,500.00</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin: 0;">Active Group Loans</h3>
+                        <button onclick="alert('Add New Group functionality to be implemented')">Add New Group</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Group Name</th>
+                                <th>Leader</th>
+                                <th>Loan Amount</th>
+                                <th>Balance</th>
+                                <th>Next Payment</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Kataba Group</td>
+                                <td>Mervis Kataba</td>
+                                <td>ZMW 13,500.00</td>
+                                <td>ZMW 1,300.00</td>
+                                <td>ZMW 1,350.00</td>
+                                <td class="status-completed">Current</td>
+                                <td>
+                                    <button style="padding: 0.25rem 0.5rem; font-size: 0.875rem;" onclick="viewGroup('Kataba Group')">View</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mubulu Entrepreneurs</td>
+                                <td>Mary Mubulu</td>
+                                <td>ZMW 13,500.00</td>
+                                <td>ZMW 13,500.00</td>
+                                <td>ZMW 1,350.00</td>
+                                <td class="status-pending">Due Today</td>
+                                <td>
+                                    <button style="padding: 0.25rem 0.5rem; font-size: 0.875rem;" onclick="viewGroup('Mubulu Entrepreneurs')">View</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mufwaya Farmers</td>
+                                <td>Mellan Mufwaya</td>
+                                <td>ZMW 13,500.00</td>
+                                <td>ZMW 13,500.00</td>
+                                <td>ZMW 1,350.00</td>
+                                <td class="status-pending">Due Today</td>
+                                <td>
+                                    <button style="padding: 0.25rem 0.5rem; font-size: 0.875rem;" onclick="viewGroup('Mufwaya Farmers')">View</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="collection-sheets-section" style="display: none;">
+                <div class="card">
+                    <h3>Daily Collection Sheet</h3>
+                    
+                    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label for="group-select">Select Group</label>
+                            <select id="group-select" aria-describedby="group-select-error">
+                                <option value="">-- Select Group --</option>
+                                <option value="kataba">Kataba Group</option>
+                                <option value="mubulu">Mubulu Entrepreneurs</option>
+                                <option value="mufwaya">Mufwaya Farmers</option>
+                            </select>
+                            <span id="group-select-error" class="error-message">Please select a group</span>
+                        </div>
+                        <div>
+                            <label for="collection-date">Collection Date</label>
+                            <input type="date" id="collection-date" value="2025-04-25" aria-describedby="collection-date-error">
+                            <span id="collection-date-error" class="error-message">Please select a valid date</span>
+                        </div>
+                    </div>
+                    
+                    <div class="collection-sheet">
+                        <table id="collection-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Kataba Mervis</th>
+                                    <th>Mubulu Mary</th>
+                                    <th>Mufwaya Mellan</th>
+                                    <th>Mugunga Samulau</th>
+                                    <th>Mulenjekwa Esther</th>
+                                    <th>Kachamba Evans</th>
+                                    <th>Phiri Fostina</th>
+                                    <th>Kataba Getrude</th>
+                                    <th>Phiri Daud</th>
+                                    <th>Siamusaka Isaac</th>
+                                    <th>Total Collected</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="collection-table-body">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="collection-totals">
+                        <div class="collection-total-card">
+                            <h3>Total Collected</h3>
+                            <p id="total-collected">ZMW 0.00</p>
+                        </div>
+                        <div class="collection-total-card">
+                            <h3>Remaining Balance</h3>
+                            <p id="remaining-balance">ZMW 0.00</p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="saveCollectionSheet()" style="margin-top: 1rem;">Save Collection Sheet</button>
+                </div>
+            </div>
+
+            <!-- Placeholder sections for other menu items -->
+            <div id="group-loans-section" style="display: none;">
+                <div class="card">
+                    <h3>Group Loans</h3>
+                    <p>Manage group loans here.</p>
+                </div>
+            </div>
+            <div id="repayment-tracking-section" style="display: none;">
+                <div class="card">
+                    <h3>Repayment Tracking</h3>
+                    <p>Track repayments here.</p>
+                </div>
+            </div>
+            <div id="reports-section" style="display: none;">
+                <div class="card">
+                    <h3>Reports</h3>
+                    <p>View reports here.</p>
+                </div>
+            </div>
+            <div id="settings-section" style="display: none;">
+                <div class="card">
+                    <h3>Settings</h3>
+                    <p>Configure settings here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize state
+        let collectionData = JSON.parse(localStorage.getItem('collectionData')) || {};
+        const totalLoanPlusInterest = 14850.00; // ZMW 13,500 loan + ZMW 1,350 interest (10%)
+        
+        // Sidebar functionality
+        const sidebarItems = document.querySelectorAll('.sidebar li');
+        const sections = document.querySelectorAll('.main-content > div');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+
+        sidebarItems.forEach(item => {
+            item.addEventListener('click', function() {
+                sidebarItems.forEach(li => li.classList.remove('active'));
+                this.classList.add('active');
+                
+                const sectionId = this.getAttribute('data-section') + '-section';
+                sections.forEach(section => section.style.display = 'none');
+                document.getElementById(sectionId).style.display = 'block';
+                
+                if (sectionId === 'collection-sheets-section') {
+                    loadCollectionSheet();
+                }
+                
+                // Hide sidebar on mobile after selection
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+
+        // Sidebar toggle for mobile
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Collection sheet functionality
+        const groupSelect = document.getElementById('group-select');
+        const collectionDate = document.getElementById('collection-date');
+        const collectionTableBody = document.getElementById('collection-table-body');
+        const totalCollectedEl = document.getElementById('total-collected');
+        const remainingBalanceEl = document.getElementById('remaining-balance');
+
+        function loadCollectionSheet() {
+            const group = groupSelect.value;
+            if (!group) {
+                document.getElementById('group-select-error').style.display = 'block';
+                return;
+            }
+            document.getElementById('group-select-error').style.display = 'none';
+
+            const date = collectionDate.value;
+            if (!date) {
+                document.getElementById('collection-date-error').style.display = 'block';
+                return;
+            }
+            document.getElementById('collection-date-error').style.display = 'none';
+
+            // Initialize collection data for group if not exists
+            if (!collectionData[group]) {
+                collectionData[group] = {};
+            }
+            if (!collectionData[group][date]) {
+                collectionData[group][date] = {
+                    payments: Array(10).fill(0),
+                    total: 0,
+                    balance: totalLoanPlusInterest
+                };
+            }
+
+            // Generate table rows
+            collectionTableBody.innerHTML = '';
+            const data = collectionData[group][date];
+            const members = [
+                'Kataba Mervis', 'Mubulu Mary', 'Mufwaya Mellan', 'Mugunga Samulau',
+                'Mulenjekwa Esther', 'Kachamba Evans', 'Phiri Fostina', 'Kataba Getrude',
+                'Phiri Daud', 'Siamusaka Isaac'
+            ];
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${date}</td>
+                ${members.map((_, i) => `
+                    <td><input type="number" min="0" step="0.01" value="${data.payments[i]}" data-index="${i}" aria-label="Payment for ${members[i]}"></td>
+                `).join('')}
+                <td>ZMW ${data.total.toFixed(2)}</td>
+                <td>ZMW ${data.balance.toFixed(2)}</td>
+            `;
+            collectionTableBody.appendChild(row);
+
+            // Update totals
+            updateTotals(data);
+
+            // Add input event listeners
+            row.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', handlePaymentInput);
+            });
+        }
+
+        function handlePaymentInput(e) {
+            const group = groupSelect.value;
+            const date = collectionDate.value;
+            const index = parseInt(e.target.getAttribute('data-index'));
+            const value = parseFloat(e.target.value) || 0;
+
+            if (value < 0) {
+                e.target.value = 0;
+                alert('Payment cannot be negative');
+                return;
+            }
+
+            collectionData[group][date].payments[index] = value;
+            collectionData[group][date].total = collectionData[group][date].payments.reduce((sum, val) => sum + val, 0);
+            collectionData[group][date].balance = Math.max(0, totalLoanPlusInterest - collectionData[group][date].total);
+            
+            updateTotals(collectionData[group][date]);
+            localStorage.setItem('collectionData', JSON.stringify(collectionData));
+        }
+
+        function updateTotals(data) {
+            totalCollectedEl.textContent = `ZMW ${data.total.toFixed(2)}`;
+            remainingBalanceEl.textContent = `ZMW ${data.balance.toFixed(2)}`;
+            const row = collectionTableBody.querySelector('tr');
+            if (row) {
+                row.cells[row.cells.length - 2].textContent = `ZMW ${data.total.toFixed(2)}`;
+                row.cells[row.cells.length - 1].textContent = `ZMW ${data.balance.toFixed(2)}`;
+            }
+        }
+
+        function saveCollectionSheet() {
+            const group = groupSelect.value;
+            const date = collectionDate.value;
+            if (!group || !date) {
+                alert('Please select a group and date');
+                return;
+            }
+            localStorage.setItem('collectionData', JSON.stringify(collectionData));
+            alert('Collection sheet saved successfully!');
+        }
+
+        // Event listeners for filters
+        groupSelect.addEventListener('change', loadCollectionSheet);
+        collectionDate.addEventListener('change', loadCollectionSheet);
+
+        // View group details (placeholder)
+        window.viewGroup = function(groupName) {
+            alert(`Viewing details for ${groupName}`);
+            // Implement group details view here
+        };
+
+        // Initialize dashboard
+        loadCollectionSheet();
+    });
+    </script>
+</body>
+</html>
